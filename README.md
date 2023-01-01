@@ -28,4 +28,5 @@ chezmoi update -v
 A script is run after install that adds necessary packages to the system. The following assumptions are made:
 
 - `bash` is installed
+- `zsh` is installed and is currently default
 - `Debian` (along with `apt`) is the Linux flavor of choice

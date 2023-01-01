@@ -1,0 +1,38 @@
+# if running bash
+if [ -n "$BASH_VERSION" ]; then
+  # include .bashrc if it exists
+  if [ -f "$HOME/.bashrc" ]; then
+    source "$HOME/.bashrc"
+  fi
+fi
+
+# set PATH so it includes user's private bin if it exists
+if [ -d "$HOME/bin" ]; then
+  PATH="$HOME/bin:$PATH"
+fi
+
+# set PATH so it includes user's private bin if it exists
+if [ -d "$HOME/.local/bin" ]; then
+  PATH="$HOME/.local/bin:$PATH"
+fi
+
+# Default Editor
+if [[ -n $SSH_CONNECTION ]]; then
+  export EDITOR="code"
+  export SVN_EDITOR="code"
+else
+  export EDITOR="code"
+  export SVN_EDITOR="code"
+fi
+
+# NVM
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
+
+# SDK Man
+export SDKMAN_DIR="$HOME/.sdkman"
+source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+# Rust
+source "$HOME/.cargo/env"

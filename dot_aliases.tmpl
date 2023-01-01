@@ -1,0 +1,36 @@
+# Forces Prompt Before Action
+alias rm="rm -iv"
+alias mv="mv -iv"
+alias cp="cp -iv"
+
+# ls
+alias lsl="ls --color=auto" # cuz typos 🤦
+alias ls="ls --color=auto"
+alias ll="ls -alh"
+alias la="ls -a"
+
+# cd
+alias ..="cd .."
+alias ...="cd ../.."
+alias ~="cd ~"
+alias dev="cd dev/"
+
+# git
+alias gs="git status"
+alias ga="git add -A"
+alias gc="git commit"
+alias gp="git pull"
+
+# Debian Specific
+alias update="sudo apt update && sudo apt upgrade"
+alias clean="sudo apt autoremove"
+alias ifconfig="ip addr show"
+
+{{- if .is_wsl }}
+
+# WSL Specific
+alias dropcache="sudo sh -c \"echo 3 >'/proc/sys/vm/drop_caches' && swapoff -a && swapon -a && printf '\n%s\n' 'Ram-cache and Swap Cleared'\""
+alias win="cd /mnt/c/Users"
+alias e="explorer.exe"
+
+{{- end }}
