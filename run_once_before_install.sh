@@ -36,11 +36,16 @@ if ! command -v node >/dev/null; then
   nvm install-latest-npm
 fi
 
-if ! command -v sdk >/dev/null; then
-  echo -e "\033[0;34mInstalling java sdk 11.0.10...\033[0m"
+if [ ! -d "$HOME/.sdkman" ]; then
+  echo -e "\033[0;34mInstalling SDK Man...\033[0m"
   curl -s "https://get.sdkman.io" | bash
   source "$HOME/.sdkman/bin/sdkman-init.sh"
   sdk install java
+fi
+
+if [ ! -d "$HOME/.antidote" ]; then
+  echo -e "\033[0;34mInstalling Antidote (A ZSH Plugin Manager)...\033[0m"
+  git clone --depth=1 https://github.com/mattmc3/antidote.git $HOME/.antidote
 fi
 
 if ! command -v starship >/dev/null; then
@@ -52,13 +57,13 @@ fi
 if ! command -v bat >/dev/null; then
   echo -e "\033[0;34mInstalling Bat v0.22.1...\033[0m"
   curl -sLO https://github.com/sharkdp/bat/releases/download/v0.22.1/bat-musl_0.22.1_amd64.deb
-  sudo mv ./bat-*.deb tmp/
-  sudo apt install -y tmp/bat-*.deb
+  sudo mv ./bat-*.deb /tmp/
+  sudo apt install -y /tmp/bat-*.deb
 fi
 
 if ! command -v lsd >/dev/null; then
   echo -e "\033[0;34mInstalling LSD v0.23.1...\033[0m"
   curl -sLO https://github.com/Peltoche/lsd/releases/download/0.23.1/lsd_0.23.1_amd64.deb
-  sudo mv ./lsd_*.deb tmp/
-  sudo apt install -y tmp/lsd_*.deb
+  sudo mv ./lsd_*.deb /tmp/
+  sudo apt install -y /tmp/lsd_*.deb
 fi

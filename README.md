@@ -20,7 +20,6 @@ On any machine, you can pull and apply the latest changes from your repo with th
 
 ```
 chezmoi update -v
-
 ```
 
 ### Assumptions

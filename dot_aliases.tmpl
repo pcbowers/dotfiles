@@ -4,16 +4,21 @@ alias mv="mv -iv"
 alias cp="cp -iv"
 
 # ls
-alias lsl="ls --color=auto" # cuz typos 🤦
-alias ls="ls --color=auto"
-alias ll="ls -alh"
-alias la="ls -a"
+alias lsl="lsd" # cuz typos 🤦
+alias ls="lsd"
+alias ll="lsd -alh"
+alias la="lsd -a"
 
 # cd
 alias ..="cd .."
 alias ...="cd ../.."
 alias ~="cd ~"
-alias dev="cd dev/"
+alias dev="cd $HOME/projects"
+alias projects="cd $HOME/projects"
+alias work="cd $HOME/projects"
+
+# bat
+alias cat="bat"
 
 # git
 alias gs="git status"
