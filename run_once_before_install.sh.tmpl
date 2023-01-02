@@ -1,0 +1,302 @@
+#!/usr/bin/env bash
+
+# ==================================================================
+# CONSTANTS
+# ==================================================================
+
+# The Total Number of Log Lines
+total_logs=13
+
+# Colors
+NOCOLOR="\033[0m"
+PURPLE="\033[0;35m"
+GREEN="\033[0;32m"
+BLUE="\033[0;34m"
+GRAY="\033[1;30m"
+YELLOW="\033[1;33m"
+
+# Track Number of Logs
+log_count=0
+
+# ==================================================================
+# GENERATED CONSTANTS
+# ==================================================================
+
+# Window Size, Calculated By Available Space
+window_size=$(($(eval "tput lines") - total_logs))
+
+# ==================================================================
+# FUNCTIONS
+# ==================================================================
+
+# Start a scrolling window constrained to a certain number of lines
+#
+# Globals:    log_count, GRAY
+# Arguments:  The number of lines that should scroll
+# Outputs:    A scrolling window with all text set to GRAY
+start_window() {
+  START=$((log_count + 1))
+  END=$((START + $1))
+
+  # If the terminal is large enough, start the window
+  if [[ "$START" -lt "$END" ]]; then
+    echo -en $(eval "echo '\e[${START};${END}r\e[${START}H'")
+  fi
+
+  echo -en "${GRAY}"
+}
+
+# Ends a scrolling window constrained to a certain number of lines
+#
+# Globals:    log_count, NOCOLOR
+# Arguments:  The number of lines that were scrolled when the window started
+# Outputs:    An end to a scrolling window with text colors removed
+end_window() {
+  END=$((log_count + 1))
+
+  # If the terminal is large enough, end the window
+  CHECK=$((0 + $1))
+  if [[ "$CHECK" -gt 0 ]]; then
+    # Clear the lines
+    for ((i = 1; i <= $1; i++)); do
+      echo ""
+    done
+
+    echo -en $(eval "echo '\e[r\e[${END}H'")
+  fi
+
+  echo -en "${NOCOLOR}"
+}
+
+# Begins a log
+#
+# Globals:    window_size, log_count, BLUE, NOCOLOR
+# Arguments:  The message that should be logged, An emoji, A color
+# Outputs:    A log statement with the start of a scrolling window to catch output
+start_log() {
+  # Increment log count
+  log_count=$((log_count + 1))
+
+  # Print log statement
+  emoji=${2:-"⏳"}
+  color=${3:-"$BLUE"}
+  echo -e "${emoji} ${color}$1${NOCOLOR}"
+
+  # Start window
+  start_window window_size
+}
+
+# Ends a log
+#
+# Globals:    window_size, log_count, YELLOW, NOCOLOR
+# Arguments:  The message that will replace the log, An emoji, A color
+# Outputs:    A log statement with the end of a scrolling window to end output
+end_log() {
+  # End window
+  end_window window_size
+
+  # If the terminal is large enough, overwrite the last line
+  if [[ "$window_size" -gt 0 ]]; then
+    tput cuu 1
+    echo -en "\033[2K"
+  fi
+
+  # Print log statement
+  emoji=${2:-"✅"}
+  color=${3:-"$YELLOW"}
+  echo -e "${emoji} ${color}$1${NOCOLOR}"
+}
+
+# logs a single line
+#
+# Globals:    window_size, log_count, PURPLE, NOCOLOR
+# Arguments:  The message that should be printed to the log, An emoji, A color
+# Outputs:    A single log statement
+log() {
+  # Increment log count
+  log_count=$((log_count + 1))
+
+  # Print log statement
+  emoji=${2:-"⏭️"}
+  color=${3:-"$PURPLE"}
+  echo -e "${emoji} ${color}$1${NOCOLOR}"
+}
+
+# ==================================================================
+# MAIN SCRIPT
+# ==================================================================
+
+# ================================
+# Clear screen
+# ================================
+
+clear -x
+
+# ================================
+# Install packages
+# ================================
+
+# Add git-core repository
+added_git_core=0
+if ! grep -q "git-core" /etc/apt/sources.list.d/*; then
+  added_git_core=1
+  start_log "Adding git-core ppa repository..."
+  sudo add-apt-repository ppa:git-core/ppa -y
+  end_log "Added git-core ppa repository!"
+else
+  log "Already Added git-core apt repository"
+fi
+
+# Install apt packages
+if [[ "$added_git_core" -eq "1" || ! -x "$(command -v git)" || ! -x "$(command -v curl)" || ! -x "$(command -v unzip)" || ! -x "$(command -v zip)" || ! -x "$(command -v zsh)" || ! -x "$(command -v python3)" || ! -x "$(command -v pip3)" ]]; then
+  start_log "Installing apt packages..."
+  sudo apt update -y && sudo apt upgrade -y
+  sudo apt install git curl unzip zip zsh python3 python3-pip -y
+  end_log "Installed apt packages!"
+else
+  log "Already installed apt packages"
+fi
+
+# Generate SSH keys
+generated_ssh_keys=0
+if [[ ! -f "$HOME/.ssh/id_ed25519" || ! -f "$HOME/.ssh/id_rsa" ]]; then
+  generated_ssh_keys=1
+  start_log "Generating SSH keys..."
+  if [[ ! -f "$HOME/.ssh/id_ed25519" ]]; then
+    ssh-keygen -t ed25519 -C "{{ .email }}" -P "{{ .passphrase }}" -f "$HOME/.ssh/id_ed25519"
+  fi
+  if [[ ! -f "$HOME/.ssh/id_rsa" ]]; then
+    ssh-keygen -t rsa -b 4096 -C "{{ .email }}" -P "{{ .passphrase }}" -f "$HOME/.ssh/id_rsa"
+  fi
+  end_log "Generated SSH keys!"
+else
+  log "Already generated SSH keys"
+fi
+
+# Switch default shell
+set_default_shell=0
+if [ "$SHELL" != "$(which zsh)" ]; then
+  set_default_shell=1
+  start_log "Setting ZSH as the default Shell..."
+  chsh -s $(which zsh)
+  end_log "ZSH set as the default shell!"
+else
+  log "ZSH already set as the default shell"
+fi
+
+# Install Tailscale
+if ! command -v tailscale >/dev/null; then
+  start_log "Installing the Tailscale CLI..."
+  curl -fsSL https://tailscale.com/install.sh | sh
+  end_log "Installed the Tailscale CLI!"
+else
+  log "Already installed the Tailscale CLI"
+fi
+
+# Install GitHub CLI
+if ! command -v gh >/dev/null; then
+  start_log "Installing the GitHub CLI..."
+  curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
+  sudo apt update
+  sudo apt install gh
+  end_log "Installed the GitHub CLI!"
+else
+  log "Already installed the GitHub CLI"
+fi
+
+# Install Rust
+if ! command -v cargo >/dev/null; then
+  start_log "Installing Rust..."
+  curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  source "$HOME/.cargo/env"
+  end_log "Installed Rust!"
+else
+  log "Already installed Rust"
+fi
+
+# Install NVM
+if ! command -v node >/dev/null; then
+  start_log "Installing NVM..."
+  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+  source "$HOME/.nvm/nvm.sh"
+  nvm install --lts
+  nvm install-latest-npm
+  end_log "Installed NVM!"
+else
+  log "Already installed NVM"
+fi
+
+# Install SDK Man
+if [ ! -d "$HOME/.sdkman" ]; then
+  start_log "Installing SDK Man..."
+  curl -s "https://get.sdkman.io" | bash
+  source "$HOME/.sdkman/bin/sdkman-init.sh"
+  sdk install java
+  end_log "Installed SDK Man!"
+else
+  log "Already installed SDK Man"
+fi
+
+# Install Antidote
+if [ ! -d "$HOME/.antidote" ]; then
+  start_log "Installing Antidote (A ZSH Plugin Manager)..."
+  git clone --depth=1 https://github.com/mattmc3/antidote.git "$HOME/.antidote"
+  end_log "Installed Antidote (A ZSH Plugin Manager)!"
+else
+  log "Already installed Antidote (A ZSH Plugin Manager)"
+fi
+
+# Install Starship
+if ! command -v starship >/dev/null; then
+  start_log "Installing Starship Prompt..."
+  curl -sS https://starship.rs/install.sh | sh
+  eval "$(starship init zsh)"
+  end_log "Installed Starship Prompt!"
+else
+  log "Already installed Starship Prompt"
+fi
+
+# Install Bat
+if ! command -v bat >/dev/null; then
+  start_log "Installing Bat v0.22.1..."
+  curl -sLO https://github.com/sharkdp/bat/releases/download/v0.22.1/bat-musl_0.22.1_amd64.deb
+  sudo mv ./bat-*.deb /tmp/
+  sudo apt install -y /tmp/bat-*.deb
+  end_log "Installed Bat!"
+else
+  log "Already installed Bat"
+fi
+
+# Install LSD
+if ! command -v lsd >/dev/null; then
+  start_log "Installing LSD v0.23.1..."
+  curl -sLO https://github.com/Peltoche/lsd/releases/download/0.23.1/lsd_0.23.1_amd64.deb
+  sudo mv ./lsd_*.deb /tmp/
+  sudo apt install -y /tmp/lsd_*.deb
+  end_log "Installed LSD!"
+else
+  log "Already installed LSD"
+fi
+
+# ================================
+# Print warnings/other messages
+# ================================
+
+# Tell user to restart terminal
+if [[ "$set_default_shell" -eq "1" ]]; then
+  log "Make sure to close and re-open your terminal to begin using ZSH as your default Shell." "💡" "$YELLOW"
+fi
+
+# Tell user to use public keys
+if [[ "$generated_ssh_keys" -eq "1" ]]; then
+  log "Make sure to install your SSH keys on all the servers you will be using to authorize this machine. Use ${BLUE}clip < ~/.ssh/id_ed25519.pub${NOCOLOR} or ${BLUE}clip < ~/.ssh/id_rsa.pub${NOCOLOR} to copy the key to your clipboard."
+fi
+
+# ================================
+# End script
+# ================================
+
+echo -e "${GREEN}"
+echo "Package Installation Complete! Your terminal is ready to go!"
+echo -en "${NOCOLOR}"
