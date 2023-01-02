@@ -24,8 +24,7 @@ chezmoi update -v
 
 ### Assumptions
 
-A script is run after install that adds necessary packages to the system. The following assumptions are made:
+A script is run right before install that adds necessary packages to the system. The following assumptions are made:
 
 - `bash` is installed
-- `zsh` is installed and is currently default
-- `Debian` (along with `apt`) is the Linux flavor of choice
+- A flavor of `Debian` (along with the `apt` package manager) is the Linux flavor of choice
