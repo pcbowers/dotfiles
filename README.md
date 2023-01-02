@@ -28,3 +28,20 @@ A script is run right before install that adds necessary packages to the system.
 
 - `bash` is installed
 - A flavor of `Debian` (along with the `apt` package manager) is the Linux flavor of choice
+
+### TODO
+
+- Add vim plugins and setup?
+- Add nvim?
+- Add One Password to use same SSH keys across machines?
+- Add terminal settings for kitty and Windows Terminal?
+- Add VSCode settings?
+- Add google drive mount?
+- Add Cisco Anyconnect for work?
+- Add NPM/Nexus for work?
+- Add docker for work?
+- Add Gradle for work?
+- Add tnsnames for work?
+- Add Slack and Chrome application files for work?
+- Change NVM defaults for work?
+- Change SDKMAN! defaults for work?
