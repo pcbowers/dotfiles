@@ -5,7 +5,10 @@
 # ==================================================================
 
 # The Total Number of Log Lines
-total_logs=13
+total_logs=14
+
+# The buffer that should be used when calculating Window Size
+window_buffer=6
 
 # Colors
 NOCOLOR="\033[0m"
@@ -22,8 +25,8 @@ log_count=0
 # GENERATED CONSTANTS
 # ==================================================================
 
-# Window Size, Calculated By Available Space
-window_size=$(($(eval "tput lines") - total_logs))
+# Window Size, Calculated By Available Space and Buffer
+window_size=$(($(eval "tput lines") - total_logs - window_buffer))
 
 # ==================================================================
 # FUNCTIONS
@@ -83,7 +86,7 @@ start_log() {
   echo -e "${emoji} ${color}$1${NOCOLOR}"
 
   # Start window
-  start_window window_size
+  start_window "$window_size"
 }
 
 # Ends a log
@@ -93,7 +96,7 @@ start_log() {
 # Outputs:    A log statement with the end of a scrolling window to end output
 end_log() {
   # End window
-  end_window window_size
+  end_window "$window_size"
 
   # If the terminal is large enough, overwrite the last line
   if [[ "$window_size" -gt 0 ]]; then
@@ -136,26 +139,32 @@ clear -x
 # Install packages
 # ================================
 
-# Add git-core repository
-added_git_core=0
-if ! grep -q "git-core" /etc/apt/sources.list.d/*; then
-  added_git_core=1
-  start_log "Adding git-core ppa repository..."
-  sudo add-apt-repository ppa:git-core/ppa -y
-  end_log "Added git-core ppa repository!"
-else
-  log "Already Added git-core apt repository"
-fi
-
 # Install apt packages
-if [[ "$added_git_core" -eq "1" || ! -x "$(command -v git)" || ! -x "$(command -v curl)" || ! -x "$(command -v unzip)" || ! -x "$(command -v zip)" || ! -x "$(command -v zsh)" || ! -x "$(command -v python3)" || ! -x "$(command -v pip3)" ]]; then
+if [[ ! -x "$(command -v git)" || ! -x "$(command -v curl)" || ! -x "$(command -v unzip)" || ! -x "$(command -v zip)" || ! -x "$(command -v zsh)" || ! -x "$(command -v python3)" || ! -x "$(command -v pip3)" || ! -x "$(command -v xdg-open)" ]]; then
   start_log "Installing apt packages..."
-  sudo apt update -y && sudo apt upgrade -y
-  sudo apt install git curl unzip zip zsh python3 python3-pip -y
+  sudo add-apt-repository ppa:git-core/ppa -y
+  sudo apt-get update -y && sudo apt-get upgrade -y
+  sudo apt-get install git curl unzip zip zsh python3 python3-pip xdg-utils -y
   end_log "Installed apt packages!"
 else
   log "Already installed apt packages"
 fi
+
+{{- if .is_wsl }}
+
+# Install WSL Utilities
+if [[ ! -x "$(command -v git)" || ! -f "$HOME/.local/bin/xdg-open" ]]; then
+  start_log "Installing WSL Utilities..."
+  sudo add-apt-repository ppa:wslutilities/wslu -y
+  sudo apt-get update -y && sudo apt-get install wslu -y
+  pip3 install --user --upgrade pip
+  pip install --user git+https://github.com/cpbotha/xdg-open-wsl.git
+  end_log "Installed WSL Utilities!"
+else
+  log "Already installed WSL Utilities"
+fi
+
+{{- end }}
 
 # Generate SSH keys
 generated_ssh_keys=0
@@ -198,8 +207,7 @@ if ! command -v gh >/dev/null; then
   start_log "Installing the GitHub CLI..."
   curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
-  sudo apt update
-  sudo apt install gh
+  sudo apt-get update -y && sudo apt-get install gh -y
   end_log "Installed the GitHub CLI!"
 else
   log "Already installed the GitHub CLI"
@@ -262,7 +270,7 @@ if ! command -v bat >/dev/null; then
   start_log "Installing Bat v0.22.1..."
   curl -sLO https://github.com/sharkdp/bat/releases/download/v0.22.1/bat-musl_0.22.1_amd64.deb
   sudo mv ./bat-*.deb /tmp/
-  sudo apt install -y /tmp/bat-*.deb
+  sudo apt-get install -y /tmp/bat-*.deb
   end_log "Installed Bat!"
 else
   log "Already installed Bat"
@@ -273,15 +281,30 @@ if ! command -v lsd >/dev/null; then
   start_log "Installing LSD v0.23.1..."
   curl -sLO https://github.com/Peltoche/lsd/releases/download/0.23.1/lsd_0.23.1_amd64.deb
   sudo mv ./lsd_*.deb /tmp/
-  sudo apt install -y /tmp/lsd_*.deb
+  sudo apt-get install -y /tmp/lsd_*.deb
   end_log "Installed LSD!"
 else
   log "Already installed LSD"
 fi
 
+# Mount Google Drive using Google Drive Ocamlfuse
+if ! command -v google-drive-ocamlfuse >/dev/null; then
+  start_log "Installing Google Drive Ocamlfuse..."
+  sudo add-apt-repository ppa:alessandro-strada/ppa -y
+  sudo apt-get update -y && sudo apt-get install google-drive-ocamlfuse -y
+  mkdir -p "$HOME/gdrive"
+  google-drive-ocamlfuse -label "gdrive-{{ .chezmoi.username }}" "$HOME/gdrive"
+  end_log "Installed Google Drive Ocamlfuse!"
+else
+  log "Already installed Google Drive Ocamlfuse"
+fi
+
 # ================================
 # Print warnings/other messages
 # ================================
+
+# Add space between logs
+echo ""
 
 # Tell user to restart terminal
 if [[ "$set_default_shell" -eq "1" ]]; then
@@ -290,7 +313,7 @@ fi
 
 # Tell user to use public keys
 if [[ "$generated_ssh_keys" -eq "1" ]]; then
-  log "Make sure to install your SSH keys on all the servers you will be using to authorize this machine. Use ${BLUE}clip < ~/.ssh/id_ed25519.pub${NOCOLOR} or ${BLUE}clip < ~/.ssh/id_rsa.pub${NOCOLOR} to copy the key to your clipboard."
+  log "Make sure to install your SSH keys on all the servers you will be using to authorize this machine. Use ${BLUE}clip < ~/.ssh/id_ed25519.pub${NOCOLOR} or ${BLUE}clip < ~/.ssh/id_rsa.pub${NOCOLOR} to copy the key to your clipboard." "💡" "$YELLOW"
 fi
 
 # ================================

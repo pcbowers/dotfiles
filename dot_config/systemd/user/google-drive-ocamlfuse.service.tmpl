@@ -1,0 +1,12 @@
+[Unit]
+Description=FUSE filesystem over Google Drive
+After = network.target
+
+[Service]
+ExecStart=google-drive-ocamlfuse -label "gdrive-{{ .chezmoi.username }}" "{{ .chezmoi.homeDir }}/gdrive"
+ExecStop=fusermount -u "{{ .chezmoi.homeDir }}/gdrive"
+Restart=always
+Type=forking
+
+[Install]
+WantedBy=multi-user.target

@@ -25,13 +25,6 @@ else
   export SVN_EDITOR="code"
 fi
 
-# SSH Agent
-if [ -z "$SSH_AUTH_SOCK" ]; then
-  eval $(ssh-agent -s)
-  ssh-add "$HOME/.ssh/id_ed25519"
-  ssh-add "$HOME/.ssh/id_rsa"
-fi
-
 # NVM
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm

@@ -1,8 +1,9 @@
 {{- $email := promptStringOnce . "email" "Email Address" -}}
 {{- $passphrase := promptStringOnce . "passphrase" "SSH Passphrase" -}}
+{{- $name := promptStringOnce . "name" "Full Name" -}}
 
 [data]
     email = {{ $email | quote }}
     passphrase = {{ $passphrase | quote }}
-    name = "Chris Bowers"
+    name = {{ $name | quote }}
     is_wsl = {{ (.chezmoi.kernel.osrelease | lower | contains "microsoft-standard") }}
