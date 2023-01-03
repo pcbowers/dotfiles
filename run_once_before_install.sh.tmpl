@@ -5,10 +5,10 @@
 # ==================================================================
 
 # The Total Number of Log Lines
-total_logs=14
+total_logs=15
 
 # The buffer that should be used when calculating Window Size
-window_buffer=6
+window_buffer=5
 
 # Colors
 NOCOLOR="\033[0m"
@@ -150,7 +150,7 @@ else
   log "Already installed apt packages"
 fi
 
-{{- if .is_wsl }}
+{{- if .isWSL }}
 
 # Install WSL Utilities
 if [[ ! -x "$(command -v git)" || ! -f "$HOME/.local/bin/xdg-open" ]]; then
@@ -285,6 +285,22 @@ if ! command -v lsd >/dev/null; then
   end_log "Installed LSD!"
 else
   log "Already installed LSD"
+fi
+
+# Install One Password
+if ! command -v op >/dev/null; then
+  start_log "Installing 1Password..."
+  curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/$(dpkg --print-architecture) stable main" | sudo tee /etc/apt/sources.list.d/1password.list
+  sudo mkdir -p /etc/debsig/policies/AC2D62742012EA22/
+  curl -sS https://downloads.1password.com/linux/debian/debsig/1password.pol | sudo tee /etc/debsig/policies/AC2D62742012EA22/1password.pol
+  sudo mkdir -p /usr/share/debsig/keyrings/AC2D62742012EA22
+  curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg
+  sudo apt-get update -y && sudo apt-get install 1password-cli -y
+  op account add --address "{{ .domainOP }}.1password.com" --email "{{ .emailOP }}"
+  end_log "Installed 1Password!"
+else
+  log "Already installed 1Password"
 fi
 
 # Mount Google Drive using Google Drive Ocamlfuse

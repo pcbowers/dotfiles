@@ -27,16 +27,17 @@ chezmoi update -v
 A script is run right before install that adds necessary packages to the system. The following assumptions are made:
 
 - `bash` is installed
-- A flavor of `Debian` (along with the `apt` package manager) is the Linux flavor of choice
+- Your terminal uses a [Nerd Font](https://www.nerdfonts.com/)
+- A flavor of `Debian` (i.e. `Ubuntu`, `Mint`) is the Linux flavor of choice
 
 ### TODO
 
-- Add vim plugins and setup?
-- Add nvim?
-- Add One Password to use same SSH keys across machines?
-- Add terminal settings for kitty and Windows Terminal?
-- Add VSCode settings?
-- Add google drive mount?
+**Home TODO:**
+
+- Add vim/nvim plugins and setup?
+
+**Work TODO:**
+
 - Add Cisco Anyconnect for work?
 - Add NPM/Nexus for work?
 - Add docker for work?

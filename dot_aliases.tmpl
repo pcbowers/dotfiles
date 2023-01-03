@@ -31,7 +31,10 @@ alias update="sudo apt update && sudo apt upgrade"
 alias clean="sudo apt autoremove"
 alias ifconfig="ip addr show"
 
-{{- if .is_wsl }}
+# 1Password
+alias ops="eval \$(op signin)"
+
+{{- if .isWSL }}
 
 # WSL Specific
 alias dropcache="sudo sh -c \"echo 3 >'/proc/sys/vm/drop_caches' && swapoff -a && swapon -a && printf '\n%s\n' 'Ram-cache and Swap Cleared'\""
