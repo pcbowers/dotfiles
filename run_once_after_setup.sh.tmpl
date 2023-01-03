@@ -7,3 +7,6 @@
 # Enable Google Drive Mount
 systemctl --user enable google-drive-ocamlfuse.service >/dev/null 2>&1
 systemctl --user start google-drive-ocamlfuse.service >/dev/null 2>&1
+
+nvim --headless +PlugInstall +qall >/dev/null 2>&1
+vim +PlugInstall +qall >/dev/null 2>&1

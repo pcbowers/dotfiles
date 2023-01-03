@@ -32,12 +32,6 @@ A script is run right before install that adds necessary packages to the system.
 
 ### TODO
 
-**Home TODO:**
-
-- Add vim/nvim plugins and setup?
-
-**Work TODO:**
-
 - Add Cisco Anyconnect for work?
 - Add NPM/Nexus for work?
 - Add docker for work?
