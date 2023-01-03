@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
 
 # ==================================================================
-# CONSTANTS
+# GLOBAL VARIABLES
 # ==================================================================
-
-# The Total Number of Log Lines
-total_logs=16
 
 # The buffer that should be used when calculating Window Size
 window_buffer=5
@@ -18,290 +15,341 @@ BLUE="\033[0;34m"
 GRAY="\033[1;30m"
 YELLOW="\033[1;33m"
 
-# Track Number of Logs
-log_count=0
-
 # ==================================================================
-# GENERATED CONSTANTS
+# HELPER FUNCTIONS
 # ==================================================================
 
-# Window Size, Calculated By Available Space and Buffer
-window_size=$(($(eval "tput lines") - total_logs - window_buffer))
+get_row() {
+  local COL
+  local ROW
+  IFS=';' read -sdR -p $'\E[6n' ROW COL
+  echo "${ROW#*[}"
+}
 
-# ==================================================================
-# FUNCTIONS
-# ==================================================================
-
-# Start a scrolling window constrained to a certain number of lines
-#
-# Globals:    log_count, GRAY
-# Arguments:  The number of lines that should scroll
-# Outputs:    A scrolling window with all text set to GRAY
 start_window() {
-  START=$((log_count + 1))
+  # WINDOW_START_ROW is also used by end_window
+  WINDOW_START_ROW=$(get_row)
   END=$((START + $1))
 
-  # If the terminal is large enough, start the window
+  # If the terminal is large enough, start a scrolling window
   if [[ "$START" -lt "$END" ]]; then
-    echo -en $(eval "echo '\e[${START};${END}r\e[${START}H'")
+    echo -en $(eval "echo '\e[${WINDOW_START_ROW};${END}r\e[${WINDOW_START_ROW}H'")
   fi
 
   echo -en "${GRAY}"
 }
 
-# Ends a scrolling window constrained to a certain number of lines
-#
-# Globals:    log_count, NOCOLOR
-# Arguments:  The number of lines that were scrolled when the window started
-# Outputs:    An end to a scrolling window with text colors removed
 end_window() {
-  END=$((log_count + 1))
-
-  # If the terminal is large enough, end the window
+  # If the terminal is large enough, end a scrolling window
   CHECK=$((0 + $1))
   if [[ "$CHECK" -gt 0 ]]; then
-    # Clear the lines
+    # Clear the lines, just in case they had text
     for ((i = 1; i <= $1; i++)); do
       echo ""
     done
 
-    echo -en $(eval "echo '\e[r\e[${END}H'")
+    echo -en $(eval "echo '\e[r\e[${WINDOW_START_ROW}H'")
+
+    # Overwrite the last line
+    tput cuu 1
+    echo -en "\033[2K"
   fi
 
   echo -en "${NOCOLOR}"
 }
 
-# Begins a log
-#
-# Globals:    window_size, log_count, BLUE, NOCOLOR
-# Arguments:  The message that should be logged, An emoji, A color
-# Outputs:    A log statement with the start of a scrolling window to catch output
 start_log() {
-  # Increment log count
-  log_count=$((log_count + 1))
-
-  # Print log statement
   emoji=${2:-"⏳"}
   color=${3:-"$BLUE"}
-  echo -e "${emoji} ${color}$1${NOCOLOR}"
+  nowrap=${4:-true}
 
-  # Start window
-  start_window "$window_size"
+  [[ "$nowrap" == true ]] && tput rmam
+  echo -e "${emoji} ${color}$1${NOCOLOR}"
+  [[ "$nowrap" == true ]] && tput rmam
 }
 
-# Ends a log
-#
-# Globals:    window_size, log_count, YELLOW, NOCOLOR
-# Arguments:  The message that will replace the log, An emoji, A color
-# Outputs:    A log statement with the end of a scrolling window to end output
 end_log() {
-  # End window
-  end_window "$window_size"
-
-  # If the terminal is large enough, overwrite the last line
-  if [[ "$window_size" -gt 0 ]]; then
-    tput cuu 1
-    echo -en "\033[2K"
-  fi
-
-  # Print log statement
   emoji=${2:-"✅"}
   color=${3:-"$YELLOW"}
+  nowrap=${4:-true}
+
+  [[ "$nowrap" == true ]] && tput rmam
   echo -e "${emoji} ${color}$1${NOCOLOR}"
+  [[ "$nowrap" == true ]] && tput smam
 }
 
-# logs a single line
-#
-# Globals:    window_size, log_count, PURPLE, NOCOLOR
-# Arguments:  The message that should be printed to the log, An emoji, A color
-# Outputs:    A single log statement
 log() {
-  # Increment log count
-  log_count=$((log_count + 1))
-
-  # Print log statement
   emoji=${2:-"⏭️"}
   color=${3:-"$PURPLE"}
+  nowrap=${4:-true}
+
+  [[ "$nowrap" == true ]] && tput rmam
   echo -e "${emoji} ${color}$1${NOCOLOR}"
+  [[ "$nowrap" == true ]] && tput smam
+}
+
+capitalize() {
+  echo "$1" | awk '{print toupper(substr($0,1,1)) substr($0,2) }'
 }
 
 # ==================================================================
-# MAIN SCRIPT
+# INSTALL FUNCTIONS
 # ==================================================================
 
-# ================================
-# Clear screen
-# ================================
+# Apt Packages
+# ------------
 
-clear -x
+should_install_apt_packages() {
+  [[ ! -x "$(command -v git)" ]] && return 0
+  [[ ! -x "$(command -v curl)" ]] && return 0
+  [[ ! -x "$(command -v unzip)" ]] && return 0
+  [[ ! -x "$(command -v zip)" ]] && return 0
+  [[ ! -x "$(command -v zsh)" ]] && return 0
+  [[ ! -x "$(command -v python3)" ]] && return 0
+  [[ ! -x "$(command -v pip3)" ]] && return 0
+  [[ ! -x "$(command -v xdg-open)" ]] && return 0
+  return 1
+}
 
-# ================================
-# Install packages
-# ================================
-
-# Install apt packages
-if [[ ! -x "$(command -v git)" || ! -x "$(command -v curl)" || ! -x "$(command -v unzip)" || ! -x "$(command -v zip)" || ! -x "$(command -v zsh)" || ! -x "$(command -v python3)" || ! -x "$(command -v pip3)" || ! -x "$(command -v xdg-open)" ]]; then
-  start_log "Installing apt packages..."
+install_apt_packages() {
   sudo add-apt-repository ppa:git-core/ppa -y
   sudo apt-get update -y && sudo apt-get upgrade -y
   sudo apt-get install git curl unzip zip zsh python3 python3-pip xdg-utils -y
-  end_log "Installed apt packages!"
-else
-  log "Already installed apt packages"
-fi
+}
 
-{{- if .isWSL }}
+log_apt_packages="Install Apt Packages (git, curl, unzip, zip, zsh, python3, python3-pip, xdg-utils)"
+just_installed_apt_packages=false
 
-# Install WSL Utilities
-if [[ ! -x "$(command -v git)" || ! -f "$HOME/.local/bin/xdg-open" ]]; then
-  start_log "Installing WSL Utilities..."
+# WSL Utilities
+# -------------
+
+should_install_wsl_utilities() {
+  [[ ! -x "$(command -v wslview)" ]] && return 0
+  [[ ! -f "$HOME/.local/bin/xdg-open" ]] && return 0
+  return 1
+}
+
+install_wsl_utilities() {
   sudo add-apt-repository ppa:wslutilities/wslu -y
   sudo apt-get update -y && sudo apt-get install wslu -y
   pip3 install --user --upgrade pip
   pip install --user git+https://github.com/cpbotha/xdg-open-wsl.git
-  end_log "Installed WSL Utilities!"
-else
-  log "Already installed WSL Utilities"
-fi
+}
 
-{{- end }}
+log_wsl_utilities="Install WSL Utilities"
 
-# Generate SSH keys
-generated_ssh_keys=0
-if [[ ! -f "$HOME/.ssh/id_ed25519" || ! -f "$HOME/.ssh/id_rsa" ]]; then
-  generated_ssh_keys=1
-  start_log "Generating SSH keys..."
+# SSH Keys
+# --------
+
+should_install_ssh_keys() {
+  [[ ! -f "$HOME/.ssh/id_ed25519" ]] && return 0
+  [[ ! -f "$HOME/.ssh/id_rsa" ]] && return 0
+  return 1
+}
+
+install_ssh_keys() {
   if [[ ! -f "$HOME/.ssh/id_ed25519" ]]; then
     ssh-keygen -t ed25519 -C "{{ .email }}" -P "{{ .passphrase }}" -f "$HOME/.ssh/id_ed25519"
   fi
+
   if [[ ! -f "$HOME/.ssh/id_rsa" ]]; then
     ssh-keygen -t rsa -b 4096 -C "{{ .email }}" -P "{{ .passphrase }}" -f "$HOME/.ssh/id_rsa"
   fi
-  end_log "Generated SSH keys!"
-else
-  log "Already generated SSH keys"
-fi
+}
 
-# Switch default shell
-set_default_shell=0
-if [ "$SHELL" != "$(which zsh)" ]; then
-  set_default_shell=1
-  start_log "Setting ZSH as the default Shell..."
+post_install_ssh_keys() {
+  echo "Make sure to install your SSH keys on all the servers you will be using to authorize this machine." \
+    "Use ${BLUE}clip < ~/.ssh/id_ed25519.pub${YELLOW} or ${BLUE}clip < ~/.ssh/id_rsa.pub${YELLOW}" \
+    "to copy the key to your clipboard."
+}
+
+log_ssh_keys="Generate SSH Keys (ed25519 and rsa)"
+
+# ZSH Shell
+# ---------
+
+should_install_zsh_shell() {
+  [[ "$SHELL" != "$(which zsh)" ]] && return 0
+  return 1
+}
+
+install_zsh_shell() {
   chsh -s $(which zsh)
-  end_log "ZSH set as the default shell!"
-else
-  log "ZSH already set as the default shell"
-fi
+}
 
-# Install Tailscale
-if ! command -v tailscale >/dev/null; then
-  start_log "Installing the Tailscale CLI..."
+post_install_zsh_shell() {
+  echo "Make sure to close and re-open your terminal to begin using ZSH as your default Shell."
+}
+
+log_zsh_shell="Set ZSH as the Default Shell"
+
+# Tailscale
+# ---------
+should_install_tailscale() {
+  [[ ! -x "$(command -v tailscale)" ]] && return 0
+  return 1
+}
+
+install_tailscale() {
   curl -fsSL https://tailscale.com/install.sh | sh
-  end_log "Installed the Tailscale CLI!"
-else
-  log "Already installed the Tailscale CLI"
-fi
+}
 
-# Install GitHub CLI
-if ! command -v gh >/dev/null; then
-  start_log "Installing the GitHub CLI..."
+log_tailscale="Install Tailscale"
+
+# Github CLI
+# ----------
+
+should_install_github_cli() {
+  [[ ! -x "$(command -v gh)" ]] && return 0
+  return 1
+}
+
+install_github_cli() {
   curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
   sudo apt-get update -y && sudo apt-get install gh -y
-  end_log "Installed the GitHub CLI!"
-else
-  log "Already installed the GitHub CLI"
-fi
+}
 
-# Install Rust
-if ! command -v cargo >/dev/null; then
-  start_log "Installing Rust..."
+log_github_cli="Install Github CLI"
+
+# Rust
+# ----
+
+should_install_rust() {
+  [[ ! -x "$(command -v cargo)" ]] && return 0
+  return 1
+}
+
+install_rust() {
   curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh
   source "$HOME/.cargo/env"
-  end_log "Installed Rust!"
-else
-  log "Already installed Rust"
-fi
+}
 
-# Install NVM
-if ! command -v node >/dev/null; then
-  start_log "Installing NVM..."
+log_rust="Install Rust"
+
+# NVM
+# ---
+
+should_install_nvm() {
+  [[ ! -x "$(command -v node)" ]] && return 0
+  return 1
+}
+
+install_nvm() {
   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
   source "$HOME/.nvm/nvm.sh"
   nvm install --lts
   nvm install-latest-npm
-  end_log "Installed NVM!"
-else
-  log "Already installed NVM"
-fi
+}
 
-# Install SDK Man
-if [ ! -d "$HOME/.sdkman" ]; then
-  start_log "Installing SDK Man..."
+log_nvm="Install NVM"
+
+# SDKMAN!
+# -------
+
+should_install_sdkman() {
+  [[ ! -d "$HOME/.sdkman" ]] && return 0
+  return 1
+}
+
+install_sdkman() {
   curl -s "https://get.sdkman.io" | bash
   source "$HOME/.sdkman/bin/sdkman-init.sh"
   sdk install java
-  end_log "Installed SDK Man!"
-else
-  log "Already installed SDK Man"
-fi
+}
 
-# Install Antidote
-if [ ! -d "$HOME/.antidote" ]; then
-  start_log "Installing Antidote (A ZSH Plugin Manager)..."
+log_sdkman="Install SDKMAN!"
+
+# Antidote
+# --------
+
+should_install_antidote() {
+  [[ ! -d "$HOME/.antidote" ]] && return 0
+  return 1
+}
+
+install_antidote() {
   git clone --depth=1 https://github.com/mattmc3/antidote.git "$HOME/.antidote"
-  end_log "Installed Antidote (A ZSH Plugin Manager)!"
-else
-  log "Already installed Antidote (A ZSH Plugin Manager)"
-fi
+}
 
-# Install Starship
-if ! command -v starship >/dev/null; then
-  start_log "Installing Starship Prompt..."
+log_antidote="Install Antidote"
+
+# Starship
+# --------
+
+should_install_starship() {
+  [[ ! -x "$(command -v starship)" ]] && return 0
+  return 1
+}
+
+install_starship() {
   curl -sS https://starship.rs/install.sh | sh
   eval "$(starship init zsh)"
-  end_log "Installed Starship Prompt!"
-else
-  log "Already installed Starship Prompt"
-fi
+}
 
-# Setup Editors
-if [[ ! -x "$(command -v vim)" || ! -x "$(command -v nvim)" || ! -f "$HOME/.local/share/nvim/site/autoload/plug.vim" || ! -f "$HOME/.vim/autoload/plug.vim" ]]; then
-  start_log "Installing Neovim, Vim, and Vim-Plug..."
+log_starship="Install Starship"
+
+# Editors
+# -------
+
+should_install_editors() {
+  [[ ! -x "$(command -v vim)" ]] && return 0
+  [[ ! -x "$(command -v nvim)" ]] && return 0
+  [[ ! -f "$HOME/.local/share/nvim/site/autoload/plug.vim" ]] && return 0
+  [[ ! -f "$HOME/.vim/autoload/plug.vim" ]] && return 0
+  return 1
+}
+
+install_editors() {
   sudo add-apt-repository ppa:neovim-ppa/stable -y
   sudo apt-get update -y && sudo apt-get install vim neovim -y
   curl -fLo "$HOME/.local/share/nvim/site/autoload/plug.vim" --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
   curl -fLo "$HOME/.vim/autoload/plug.vim" --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-  end_log "Installed Neovim and Vim-Plug!"
-else
-  log "Already installed Neovim!"
-fi
+}
 
-# Install Bat
-if ! command -v bat >/dev/null; then
-  start_log "Installing Bat v0.22.1..."
+log_editors="Install Neovim and Vim (along with Vim-Plug)"
+
+# Bat
+# ---
+
+should_install_bat() {
+  [[ ! -x "$(command -v bat)" ]] && return 0
+  return 1
+}
+
+install_bat() {
   curl -sLO https://github.com/sharkdp/bat/releases/download/v0.22.1/bat-musl_0.22.1_amd64.deb
   sudo mv ./bat-*.deb /tmp/
   sudo apt-get install -y /tmp/bat-*.deb
-  end_log "Installed Bat!"
-else
-  log "Already installed Bat"
-fi
+}
 
-# Install LSD
-if ! command -v lsd >/dev/null; then
-  start_log "Installing LSD v0.23.1..."
+log_bat="Install Bat v0.22.1"
+
+# LSD
+# ---
+
+should_install_lsd() {
+  [[ ! -x "$(command -v lsd)" ]] && return 0
+  return 1
+}
+
+install_lsd() {
   curl -sLO https://github.com/Peltoche/lsd/releases/download/0.23.1/lsd_0.23.1_amd64.deb
   sudo mv ./lsd_*.deb /tmp/
   sudo apt-get install -y /tmp/lsd_*.deb
-  end_log "Installed LSD!"
-else
-  log "Already installed LSD"
-fi
+}
 
-# Install One Password
-if ! command -v op >/dev/null; then
-  start_log "Installing 1Password..."
+log_lsd="Install LSD v0.23.1"
+
+# 1Password
+# ---------
+
+should_install_1password() {
+  [[ ! -x "$(command -v op)" ]] && return 0
+  return 1
+}
+
+install_1password() {
   curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg
   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/$(dpkg --print-architecture) stable main" | sudo tee /etc/apt/sources.list.d/1password.list
   sudo mkdir -p /etc/debsig/policies/AC2D62742012EA22/
@@ -310,44 +358,85 @@ if ! command -v op >/dev/null; then
   curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg
   sudo apt-get update -y && sudo apt-get install 1password-cli -y
   op account add --address "{{ .domainOP }}.1password.com" --email "{{ .emailOP }}"
-  end_log "Installed 1Password!"
-else
-  log "Already installed 1Password"
-fi
+}
 
-# Mount Google Drive using Google Drive Ocamlfuse
-if ! command -v google-drive-ocamlfuse >/dev/null; then
-  start_log "Installing Google Drive Ocamlfuse..."
+log_1password="Install 1Password"
+
+# Google Drive
+# ------------
+
+should_install_gdrive() {
+  [[ ! -x "$(command -v google-drive-ocamlfuse)" ]] && return 0
+  return 1
+}
+
+install_gdrive() {
   sudo add-apt-repository ppa:alessandro-strada/ppa -y
   sudo apt-get update -y && sudo apt-get install google-drive-ocamlfuse -y
   mkdir -p "$HOME/gdrive"
   google-drive-ocamlfuse -label "gdrive-{{ .chezmoi.username }}" "$HOME/gdrive"
-  end_log "Installed Google Drive Ocamlfuse!"
-else
-  log "Already installed Google Drive Ocamlfuse"
-fi
+}
 
-# ================================
-# Print warnings/other messages
-# ================================
+log_gdrive="Install Google Drive Ocamlfuse"
 
-# Add space between logs
-echo ""
+# ==================================================================
+# MAIN SCRIPT
+# ==================================================================
 
-# Tell user to restart terminal
-if [[ "$set_default_shell" -eq "1" ]]; then
-  log "Make sure to close and re-open your terminal to begin using ZSH as your default Shell." "💡" "$YELLOW"
-fi
+# Clear screen
+clear -x
 
-# Tell user to use public keys
-if [[ "$generated_ssh_keys" -eq "1" ]]; then
-  log "Make sure to install your SSH keys on all the servers you will be using to authorize this machine. Use ${BLUE}clip < ~/.ssh/id_ed25519.pub${NOCOLOR} or ${BLUE}clip < ~/.ssh/id_rsa.pub${NOCOLOR} to copy the key to your clipboard." "💡" "$YELLOW"
-fi
+# Define installs
+packages_to_install=(
+  "apt_packages"
+  {{- if .isWSL }} "wsl_utilities" {{- end }}
+  "zsh_shell"
+  "antidote"
+  "ssh_keys"
+  "tailscale"
+  "github_cli"
+  "rust"
+  "nvm"
+  "sdkman"
+  "starship"
+  "editors"
+  "bat"
+  "lsd"
+  "1password"
+  "gdrive"
+)
 
-# ================================
+# Set window size, Calculated By available space and buffer
+window_size=$(($(eval "tput lines") - ${#packages_to_install[@]} - window_buffer))
+
+# Install packages
+for package in "${packages_to_install[@]}"; do
+  log_name="log_$package"
+  if eval "should_install_$package"; then
+    start_log "${!log_name} ${GRAY}...${NOCOLOR}"
+    start_window "$window_size"
+    eval "just_installed_$package=true"
+    eval "install_$package"
+    end_window "$window_size"
+    end_log "${!log_name} ${GRAY}Complete${NOCOLOR}"
+  else
+    log "${!log_name} ${GRAY}Already Complete${NOCOLOR}"
+  fi
+done
+
+# Log comments after installation
+for package in "${packages_to_install[@]}"; do
+  func_name="post_install_$package"
+  eval "just_installed=\$just_installed_$package"
+  if [[ $(type -t $func_name) == function ]]; then
+    if [[ $just_installed == true ]]; then
+      echo ""
+      log "$(eval "$func_name")" "💡" "$YELLOW" false
+    fi
+  fi
+done
+
 # End script
-# ================================
-
 echo -e "${GREEN}"
-echo "Package Installation Complete! Your terminal is ready to go!"
+echo "📦 Package Installation Complete! Your terminal is ready to go!"
 echo -en "${NOCOLOR}"

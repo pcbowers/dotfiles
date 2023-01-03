@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
 
-# ==================================================================
-# Enable Services
-# ==================================================================
-
 # Enable Google Drive Mount
 systemctl --user enable google-drive-ocamlfuse.service >/dev/null 2>&1
 systemctl --user start google-drive-ocamlfuse.service >/dev/null 2>&1
 
+# Install Vim-Plug Plugins
 nvim --headless +PlugInstall +qall >/dev/null 2>&1
 vim +PlugInstall +qall >/dev/null 2>&1
