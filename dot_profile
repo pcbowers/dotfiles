@@ -36,3 +36,7 @@ source "$HOME/.sdkman/bin/sdkman-init.sh"
 
 # Rust
 source "$HOME/.cargo/env"
+
+# Go
+export PATH=$PATH:/usr/local/go/bin
+export GOPATH=$(go env GOPATH)

@@ -379,6 +379,23 @@ install_gdrive() {
 
 log_gdrive="Install Google Drive Ocamlfuse"
 
+# Go
+# --
+
+should_install_go() {
+  [[ ! -x "$(command -v go)" ]] && return 0
+  return 1
+}
+
+install_go() {
+  curl -sLO https://go.dev/dl/go1.19.5.linux-amd64.tar.gz
+  sudo rm -rf /usr/local/go
+  sudo tar -C /usr/local -xzf go*.linux-amd64.tar.gz
+  sudo rm go*.linux-amd64.tar.gz
+}
+
+log_go="Install Go v1.19.5"
+
 # ==================================================================
 # MAIN SCRIPT
 # ==================================================================
@@ -404,6 +421,7 @@ packages_to_install=(
   "lsd"
   "1password"
   "gdrive"
+  "go"
 )
 
 # Set window size, Calculated By available space and buffer

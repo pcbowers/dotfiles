@@ -7,3 +7,6 @@ systemctl --user start google-drive-ocamlfuse.service >/dev/null 2>&1
 # Install Vim-Plug Plugins
 nvim --headless +PlugInstall +qall >/dev/null 2>&1
 vim +PlugInstall +qall >/dev/null 2>&1
+
+# Ensure everything is sourced appropriately
+source $HOME/.profile
