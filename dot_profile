@@ -38,5 +38,6 @@ source "$HOME/.sdkman/bin/sdkman-init.sh"
 source "$HOME/.cargo/env"
 
 # Go
+export PATH=$PATH:/usr/local/go/bin
 export PATH=$PATH:$HOME/go/bin
 export GOPATH=$(go env GOPATH)
