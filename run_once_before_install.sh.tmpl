@@ -244,6 +244,19 @@ install_nvm() {
 
 log_nvm="Install NVM"
 
+# PNPM
+# ----
+should_install_pnpm() {
+  [[ ! -x "$(command -v pnpm)" ]] && return 0
+  return 1
+}
+
+install_pnpm() {
+  curl -fsSL https://get.pnpm.io/install.sh | sh -
+}
+
+log_pnpm="Install PNPM"
+
 # SDKMAN!
 # -------
 
@@ -414,6 +427,7 @@ packages_to_install=(
   "github_cli"
   "rust"
   "nvm"
+  "pnpm"
   "sdkman"
   "starship"
   "editors"
