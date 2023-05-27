@@ -3,7 +3,6 @@
 {{- $name := promptStringOnce . "name" "Full Name" "Chris Bowers" -}}
 {{- $domainOP := promptStringOnce . "domainOP" "1Password Subdomain" "my" -}}
 {{- $emailOP := promptStringOnce . "emailOP" "1Password Email" "pcbowers@gmail.com" -}}
-{{- $isWork := promptBoolOnce . "isWork" "Is this Macine for Work" false -}}
 
 [data]
     email = {{ $email | quote }}
@@ -11,5 +10,4 @@
     name = {{ $name | quote }}
     domainOP = {{ $domainOP | quote }}
     emailOP = {{ $emailOP | quote }}
-    isWork = {{ $isWork }}
     isWSL = {{ (.chezmoi.kernel.osrelease | lower | contains "microsoft-standard") }}

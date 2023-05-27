@@ -1,47 +1,75 @@
 # if running bash
 if [ -n "$BASH_VERSION" ]; then
-  # include .bashrc if it exists
   if [ -f "$HOME/.bashrc" ]; then
     source "$HOME/.bashrc"
   fi
 fi
 
+# ZSH Completions
+mkdir -p "$HOME/.zsh"
+export FPATH="$HOME/.zsh:$FPATH"
+
 # set PATH so it includes user's private bin if it exists
 if [ -d "$HOME/bin" ]; then
-  PATH="$HOME/bin:$PATH"
+  export PATH="$HOME/bin:$PATH"
 fi
 
 # set PATH so it includes user's private bin if it exists
 if [ -d "$HOME/.local/bin" ]; then
-  PATH="$HOME/.local/bin:$PATH"
+  export PATH="$HOME/.local/bin:$PATH"
 fi
 
 # Default Editor
 if [[ -n $SSH_CONNECTION ]]; then
-  export EDITOR="code"
-  export SVN_EDITOR="code"
+  export EDITOR="nvim"
+  export SVN_EDITOR="nvim"
 else
-  export EDITOR="code"
-  export SVN_EDITOR="code"
+  export EDITOR="nvim"
+  export SVN_EDITOR="nvim"
 fi
 
-# NVM
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+# Cisco AnyConnect
+if [ -d "/opt/cisco/anyconnect/bin" ]; then
+  export PATH="/opt/cisco/anyconnect/bin:$PATH"
+fi
+
+# JetBrains Toolbox Scripts
+if [ -d "$HOME/.local/share/JetBrains/Toolbox/scripts" ]; then
+  export PATH="$HOME/.local/share/JetBrains/Toolbox/scripts:$PATH"
+fi
+
+# FNM
+if [ -d "$HOME/.local/share/fnm" ]; then
+  export PATH="$HOME/.local/share/fnm:$PATH"
+  eval "$(fnm env --use-on-cd)"
+  fnm completions --shell zsh >$HOME/.zsh/_fnm
+fi
+
+# Deno
+if [ -d "$HOME/.deno" ]; then
+  export DENO_INSTALL="$HOME/.deno"
+  export PATH="$DENO_INSTALL/bin:$PATH"
+  deno completions zsh >$HOME/.zsh/_deno
+fi
 
 # PNPM
-export PNPM_HOME="$HOME/.local/share/pnpm"
-export PATH="$PNPM_HOME:$PATH"
+if [ -d "$HOME/.local/share/pnpm" ]; then
+  export PNPM_HOME="$HOME/.local/share/pnpm"
+  export PATH="$PNPM_HOME:$PATH"
+fi
 
 # SDK Man
-export SDKMAN_DIR="$HOME/.sdkman"
-source "$HOME/.sdkman/bin/sdkman-init.sh"
+if [ -d "$HOME/.sdkman" ]; then
+  export SDKMAN_DIR="$HOME/.sdkman"
+  source "$HOME/.sdkman/bin/sdkman-init.sh"
+fi
 
 # Rust
-source "$HOME/.cargo/env"
+if [ -d "$HOME/.cargo" ]; then
+  source "$HOME/.cargo/env"
+fi
 
 # Go
-export PATH=$PATH:/usr/local/go/bin
-export PATH=$PATH:$HOME/go/bin
-export GOPATH=$(go env GOPATH)
+if [ -d "/usr/local/go/bin" ]; then
+  export PATH="/usr/local/go/bin:$PATH"
+fi

@@ -35,11 +35,11 @@ bindkey -v
 # Aliases
 source "$HOME/.aliases"
 
-# Easy Source When Making Edits
-alias sc="source $HOME/.zshrc"
-
 # Functions
 source "$HOME/.functions"
+
+# Easy Source When Making Edits
+alias sf="source $HOME/.zshrc"
 
 # Default Prompt
 PROMPT="%F{green}%n%f%F{green}@%f%F{green}%m%f:%F{blue}%~%f$ "

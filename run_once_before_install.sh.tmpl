@@ -118,7 +118,6 @@ install_apt_packages() {
 }
 
 log_apt_packages="Install Apt Packages (git, curl, unzip, zip, zsh, python3, python3-pip, xdg-utils)"
-just_installed_apt_packages=false
 
 # WSL Utilities
 # -------------
@@ -185,6 +184,7 @@ log_zsh_shell="Set ZSH as the Default Shell"
 
 # Tailscale
 # ---------
+
 should_install_tailscale() {
   [[ ! -x "$(command -v tailscale)" ]] && return 0
   return 1
@@ -227,25 +227,41 @@ install_rust() {
 
 log_rust="Install Rust"
 
-# NVM
+# FNM
 # ---
 
-should_install_nvm() {
+should_install_fnm() {
   [[ ! -x "$(command -v node)" ]] && return 0
   return 1
 }
 
-install_nvm() {
-  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
-  source "$HOME/.nvm/nvm.sh"
-  nvm install --lts
+install_fnm() {
+  curl -fsSL https://fnm.vercel.app/install | bash -s -- --skip-shell
+  export PATH="/home/pcbowers/.local/share/fnm:$PATH"
+  eval "$(fnm env --use-on-cd)"
+  fnm install --lts
   nvm install-latest-npm
 }
 
-log_nvm="Install NVM"
+log_nvm="Install FNM"
+
+# Deno
+# ----
+
+should_install_deno() {
+  [[ ! -x "$(command -v deno)" ]] && return 0
+  return 1
+}
+
+install_deno() {
+  curl -fsSL https://deno.land/x/install/install.sh | sh
+}
+
+log_deno="Install Deno"
 
 # PNPM
 # ----
+
 should_install_pnpm() {
   [[ ! -x "$(command -v pnpm)" ]] && return 0
   return 1
@@ -308,19 +324,18 @@ log_starship="Install Starship"
 should_install_editors() {
   [[ ! -x "$(command -v vim)" ]] && return 0
   [[ ! -x "$(command -v nvim)" ]] && return 0
-  [[ ! -f "$HOME/.local/share/nvim/site/autoload/plug.vim" ]] && return 0
-  [[ ! -f "$HOME/.vim/autoload/plug.vim" ]] && return 0
   return 1
 }
 
 install_editors() {
-  sudo add-apt-repository ppa:neovim-ppa/stable -y
+  sudo add-apt-repository ppa:neovim-ppa/unstable -y
   sudo apt-get update -y && sudo apt-get install vim neovim -y
-  curl -fLo "$HOME/.local/share/nvim/site/autoload/plug.vim" --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-  curl -fLo "$HOME/.vim/autoload/plug.vim" --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+  rm -rf ~/.config/nvim
+  rm -rf ~/.local/share/nvim
+  git clone https://github.com/NvChad/NvChad ~/.config/nvim --depth 1
 }
 
-log_editors="Install Neovim and Vim (along with Vim-Plug)"
+log_editors="Install Vim and NeoVim (along with NvChad)"
 
 # Bat
 # ---
@@ -336,7 +351,7 @@ install_bat() {
   sudo apt-get install -y /tmp/bat-*.deb
 }
 
-log_bat="Install Bat v0.22.1"
+log_bat="Install Bat v0.23.0"
 
 # LSD
 # ---
@@ -375,23 +390,6 @@ install_1password() {
 
 log_1password="Install 1Password"
 
-# Google Drive
-# ------------
-
-should_install_gdrive() {
-  [[ ! -x "$(command -v google-drive-ocamlfuse)" ]] && return 0
-  return 1
-}
-
-install_gdrive() {
-  sudo add-apt-repository ppa:alessandro-strada/ppa -y
-  sudo apt-get update -y && sudo apt-get install google-drive-ocamlfuse -y
-  mkdir -p "$HOME/gdrive"
-  google-drive-ocamlfuse -label "gdrive-{{ .chezmoi.username }}" "$HOME/gdrive"
-}
-
-log_gdrive="Install Google Drive Ocamlfuse"
-
 # Go
 # --
 
@@ -401,13 +399,29 @@ should_install_go() {
 }
 
 install_go() {
-  curl -sLO https://go.dev/dl/go1.19.5.linux-amd64.tar.gz
+  curl -sLO https://go.dev/dl/go1.20.4.linux-amd64.tar.gz
   sudo rm -rf /usr/local/go
   sudo tar -C /usr/local -xzf go*.linux-amd64.tar.gz
   sudo rm go*.linux-amd64.tar.gz
 }
 
-log_go="Install Go v1.19.5"
+log_go="Install Go v1.20.4"
+
+# Fastfetch
+# ---------
+
+should_install_fastfetch() {
+  [[ ! -x "$(command -v fastfetch)" ]] && return 0
+  return 1
+}
+
+install_fastfetch() {
+  curl -sLO https://github.com/LinusDierheimer/fastfetch/releases/download/1.11.0/fastfetch-1.11.0-Linux.deb
+  sudo mv ./fastfetch-*.deb /tmp/
+  sudo apt-get install -y /tmp/fastfetch-*.deb
+}
+
+log_fastfetch="Install Fastfetch v1.11.0"
 
 # ==================================================================
 # MAIN SCRIPT
@@ -426,7 +440,8 @@ packages_to_install=(
   "tailscale"
   "github_cli"
   "rust"
-  "nvm"
+  "fnm"
+  "deno"
   "pnpm"
   "sdkman"
   "starship"
@@ -434,8 +449,8 @@ packages_to_install=(
   "bat"
   "lsd"
   "1password"
-  "gdrive"
   "go"
+  "fastfetch"
 )
 
 # Set window size, Calculated By available space and buffer

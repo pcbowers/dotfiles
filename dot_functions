@@ -8,6 +8,13 @@ weather() {
   curl "wttr.in?format=$1"
 }
 
+# Reboot a Spring app on changes
+gradledev() {
+  ./gradlew build --continuous --quiet -xtest -xdockerRun >/dev/null 0>&1 2>&1 &
+  ./gradlew bootRun
+  kill $(jobs -p)
+}
+
 # Extract Files
 extract() {
   if [ -z "$1" ]; then

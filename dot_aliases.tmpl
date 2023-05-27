@@ -1,8 +1,3 @@
-# Forces Prompt Before Action
-alias rm="rm -iv"
-alias mv="mv -iv"
-alias cp="cp -iv"
-
 # ls
 alias lsl="lsd" # cuz typos 🤦
 alias ls="lsd"
@@ -21,14 +16,13 @@ alias work="cd $HOME/projects"
 alias cat="bat"
 
 # vim
-alias v="vim"
-alias nv="nvim"
+alias vim="nvim"
 
 # git
 alias gs="git status"
 alias ga="git add -A"
-alias gc="git commit"
 alias gp="git pull"
+alias gf="git fetch"
 
 # Debian Specific
 alias update="sudo apt update && sudo apt upgrade"
@@ -38,6 +32,7 @@ alias ifconfig="ip addr show"
 # 1Password
 alias ops="eval \$(op signin)"
 
+# pnpm
 alias p="pnpm"
 
 {{- if .isWSL }}
