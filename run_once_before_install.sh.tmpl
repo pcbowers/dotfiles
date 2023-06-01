@@ -243,7 +243,7 @@ install_fnm() {
   nvm install-latest-npm
 }
 
-log_nvm="Install FNM"
+log_fnm="Install FNM"
 
 # Deno
 # ----
@@ -423,6 +423,24 @@ install_fastfetch() {
 
 log_fastfetch="Install Fastfetch v1.11.0"
 
+# Caddy
+# -----
+
+should_install_caddy() {
+  [[ ! -x "$(command -v caddy)" ]] && return 0
+  return 1
+}
+
+install_caddy() {
+  sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
+  curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+  curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+  sudo apt update
+  sudo apt install caddy
+}
+
+log_caddy="Install Caddy"
+
 # ==================================================================
 # MAIN SCRIPT
 # ==================================================================
@@ -451,6 +469,7 @@ packages_to_install=(
   "1password"
   "go"
   "fastfetch"
+  "caddy"
 )
 
 # Set window size, Calculated By available space and buffer

@@ -1,0 +1,5 @@
+{$DOMAIN}
+
+tls {$CERT} {$KEY}
+root * {$FILE_PATH}
+file_server browse
