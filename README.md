@@ -11,7 +11,7 @@ Check out the [Quick Start](https://www.chezmoi.io/quick-start/) page.
 On any machine, you can install chezmoi and these dotfiles with the following command:
 
 ```bash
-sh -c "$(curl -fsLS chezmoi.io/get)" -- -b $HOME/.local/bin init --apply pcbowers
+sh -c "$(curl -fsLS chezmoi.io/get)" -- -b $HOME/.local/bin init --apply pcbowers --ssh
 ```
 
 ### Update
