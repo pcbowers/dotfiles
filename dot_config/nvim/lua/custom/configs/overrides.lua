@@ -66,6 +66,7 @@ M.mason = {
 		"taplo",
 		"eslint-lsp",
 		"shellcheck",
+		"deno",
 
 		-- Formatters
 		"prettier",

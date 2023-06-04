@@ -6,3 +6,7 @@ autocmd("VimResized", {
 })
 
 vim.opt.colorcolumn = "120"
+
+vim.g.markdown_fenced_languages = {
+  "ts=typescript"
+}

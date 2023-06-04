@@ -46,3 +46,9 @@ PROMPT="%F{green}%n%f%F{green}@%f%F{green}%m%f:%F{blue}%~%f$ "
 
 # Starship Prompt
 eval "$(starship init zsh)"
+
+# Fzf
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+# Zoxide
+eval "$(zoxide init zsh)"

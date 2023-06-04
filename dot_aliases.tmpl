@@ -1,8 +1,10 @@
 # ls
 alias lsl="lsd" # cuz typos 🤦
 alias ls="lsd"
-alias ll="lsd -alh"
-alias la="lsd -a"
+alias ll="lsd -l"
+alias la="lsd -A"
+alias lt="lsd -A --tree"
+alias lla="lsd -lA"
 
 # cd
 alias ..="cd .."
@@ -14,6 +16,7 @@ alias work="cd $HOME/projects"
 
 # bat
 alias cat="bat"
+alias search="fzf --preview 'bat --color=always --style=numbers --line-range=:500 {}' | xargs $EDITOR"
 
 # vim
 alias vim="nvim"

@@ -8,6 +8,11 @@ weather() {
   curl "wttr.in?format=$1"
 }
 
+# List Directory Contents as a Tree
+tree() {
+  lsd -A --tree --depth ${1:-2}
+}
+
 # Reboot a Spring app on changes
 gradledev() {
   ./gradlew build --continuous --quiet -xtest -xdockerRun >/dev/null 0>&1 2>&1 &

@@ -441,6 +441,22 @@ install_caddy() {
 
 log_caddy="Install Caddy"
 
+# Zoxide
+# ------
+
+should_install_zoxide() {
+  [[ ! -x "$(command -v zoxide)" ]] && return 0
+  return 1
+}
+
+install_zoxide() {
+  git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
+  ~/.fzf/install
+  curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash
+}
+
+log_zoxide="Install Zoxide"
+
 # ==================================================================
 # MAIN SCRIPT
 # ==================================================================
@@ -470,6 +486,7 @@ packages_to_install=(
   "go"
   "fastfetch"
   "caddy"
+  "zoxide"
 )
 
 # Set window size, Calculated By available space and buffer

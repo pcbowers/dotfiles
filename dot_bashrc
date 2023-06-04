@@ -1,7 +1,7 @@
 # If Not Interactive, Do Nothing
 case $- in
-*i*) ;;
-*) return ;;
+  *i*) ;;
+  *) return ;;
 esac
 
 # Aliases
@@ -18,3 +18,9 @@ export PS1="\[\e[32m\]\u\[\e[m\]\[\e[32m\]@\[\e[m\]\[\e[32m\]\h\[\e[m\]:\[\e[34m
 
 # Starship Prompt
 eval "$(starship init bash)"
+
+# Fzf
+[ -f ~/.fzf.bash ] && source ~/.fzf.bash
+
+# Zoxide
+eval "$(zoxide init bash)"

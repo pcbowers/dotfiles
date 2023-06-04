@@ -5,8 +5,6 @@ ohmyzsh/ohmyzsh path:plugins/git-extras
 ohmyzsh/ohmyzsh path:plugins/npm
 ohmyzsh/ohmyzsh path:plugins/sdk
 ohmyzsh/ohmyzsh path:plugins/vscode
-ohmyzsh/ohmyzsh path:plugins/z
-
 
 # Other Plugins
 zdharma/fast-syntax-highlighting kind:defer

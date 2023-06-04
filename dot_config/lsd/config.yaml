@@ -1,0 +1,6 @@
+hyperlink: auto
+size: short
+date: relative
+sorting:
+  column: name
+  dir-grouping: first

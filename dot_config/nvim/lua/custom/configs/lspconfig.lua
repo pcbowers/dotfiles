@@ -15,6 +15,7 @@ local servers = {
   "gradle_ls",
   "rust_analyzer",
   "jdtls",
+  "denols"
 }
 
 for _, lsp in ipairs(servers) do
