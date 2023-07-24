@@ -7,7 +7,9 @@ ohmyzsh/ohmyzsh path:plugins/sdk
 ohmyzsh/ohmyzsh path:plugins/vscode
 
 # Other Plugins
-zdharma/fast-syntax-highlighting kind:defer
-zsh-users/zsh-autosuggestions
 zsh-users/zsh-completions
-gradle/gradle-completion
+zdharma/fast-syntax-highlighting kind:defer
+
+# These should be loaded last
+zsh-users/zsh-autosuggestions kind:defer
+zsh-users/zsh-history-substring-search kind:defer

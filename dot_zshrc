@@ -1,11 +1,16 @@
 # Source Profile
 source "$HOME/.profile"
 
-# Source Antidote
-source "$HOME/.antidote/antidote.zsh"
-
 # Initialize Plugins
-antidote load
+zsh_plugins=$HOME/.zsh_plugins
+if [[ ! ${zsh_plugins}.zsh -nt ${zsh_plugins}.txt ]]; then
+  (
+    source "$HOME/.antidote/antidote.zsh"
+    antidote bundle <${zsh_plugins}.txt >${zsh_plugins}.zsh
+  )
+fi
+
+source ${zsh_plugins}.zsh
 
 # History settings
 HISTFILE="$HOME/.histfile"
@@ -23,11 +28,16 @@ setopt hist_verify            # Don't execute immediately upon history expansion
 setopt inc_append_history     # Write to history file immediately, not when shell quits
 setopt share_history          # Share history among all sessions
 
+bindkey '^[[A' history-substring-search-up
+bindkey '^[[B' history-substring-search-down
+bindkey "$terminfo[kcuu1]" history-substring-search-up
+bindkey "$terminfo[kcud1]" history-substring-search-down
+
 # Tab completion
 autoload -Uz compinit && compinit
 setopt complete_in_word # cd /ho/sco/tm<TAB> expands to /home/scott/tmp
 setopt autocd           # cd to a folder just by typing it's name
-unsetopt beep           # Remove the beep on fail
+setopt no_beep          # Remove the beep on fail
 
 # Bindkey
 bindkey -v
