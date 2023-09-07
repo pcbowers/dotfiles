@@ -28,6 +28,9 @@ setopt hist_verify            # Don't execute immediately upon history expansion
 setopt inc_append_history     # Write to history file immediately, not when shell quits
 setopt share_history          # Share history among all sessions
 
+# Bindkey
+bindkey -v
+
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
 bindkey "$terminfo[kcuu1]" history-substring-search-up
@@ -38,9 +41,6 @@ autoload -Uz compinit && compinit
 setopt complete_in_word # cd /ho/sco/tm<TAB> expands to /home/scott/tmp
 setopt autocd           # cd to a folder just by typing it's name
 setopt no_beep          # Remove the beep on fail
-
-# Bindkey
-bindkey -v
 
 # Aliases
 source "$HOME/.aliases"
