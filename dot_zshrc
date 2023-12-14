@@ -33,8 +33,10 @@ bindkey -v
 
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
-bindkey "$terminfo[kcuu1]" history-substring-search-up
-bindkey "$terminfo[kcud1]" history-substring-search-down
+bindkey "${terminfo[kcuu1]}" history-substring-search-up
+bindkey "${terminfo[kcud1]}" history-substring-search-down
+bindkey '^[[1;5D' backward-word
+bindkey '^[[1;5C' forward-word
 
 # Tab completion
 autoload -Uz compinit && compinit
@@ -49,7 +51,7 @@ source "$HOME/.aliases"
 source "$HOME/.functions"
 
 # Easy Source When Making Edits
-alias sf="source $HOME/.zshrc"
+alias sf='source $HOME/.zshrc'
 
 # Default Prompt
 PROMPT="%F{green}%n%f%F{green}@%f%F{green}%m%f:%F{blue}%~%f$ "
