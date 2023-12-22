@@ -1,5 +1,17 @@
 [user]
-	name = Chris Bowers
-	email = {{ .email }}
+name = Chris Bowers
+email = {{ .email }}
+
 [init]
-  defaultBranch = main
+defaultBranch = main
+
+{{- if .isWSL }}
+[core]
+sshCommand = ssh.exe
+{{- end }}
+
+[gpg]
+format = ssh
+
+[commit]
+gpgsign = true
